@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NooBaSiK Marathon — График дня</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: transparent;
+  color: #00d0ff;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  font-size: 36px;
+  text-shadow:
+    0 0 6px #00d0ff,
+    0 0 12px #00a8c0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 24px;
+  text-align: center;
+}
+th, td {
+  border: 1px solid #00d0ff;
+  padding: 8px;
+}
+th {
+  background-color: rgba(0,208,255,0.2);
+}
+tr:nth-child(even) {
+  background-color: rgba(0,208,255,0.05);
+}
+</style>
+</head>
+<body>
+
+<h1>График дня</h1>
+<div id="schedule-container"></div>
+
+<script>
+let schedule = [];
+fetch('Марафон.json')
+  .then(r => r.json())
+  .then(data => schedule = data)
+  .catch(err => console.error('Не удалось загрузить JSON', err));
+
+function renderDay() {
+  const container = document.getElementById('schedule-container');
+  container.innerHTML = '';
+  const now = new Date();
+  const todayKey = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  const dayBlocks = schedule[todayKey];
+  if(!dayBlocks) {
+    container.textContent = "Нет расписания на сегодня";
+    return;
+  }
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr><th>Начало</th><th>Конец</th><th>Активность</th></tr>`;
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  dayBlocks.forEach(block => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(block.start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+      <td>${new Date(block.end).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+      <td>${block.text}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// Автообновление каждую минуту
+renderDay();
+setInterval(renderDay, 60000);
+</script>
+
+</body>
+</html>

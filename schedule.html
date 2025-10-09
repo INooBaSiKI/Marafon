@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NooBaSiK Marathon</title>
+<style>
+body{
+  background: transparent;
+  color: #00d0ff;
+  font-family: "Segoe UI", sans-serif;
+  text-align:center;
+  font-size:36px;
+  font-weight:600;
+  letter-spacing:1px;
+  text-shadow:
+    0 0 6px #00d0ff,
+    0 0 18px #00a8c0,
+    0 0 36px #005f70;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+
+#container{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  flex-direction:column;
+}
+
+#schedule{
+  opacity:0;
+  transition:opacity 1s ease, transform 0.6s ease;
+  display:inline-block;
+  padding:20px 40px;
+  border-radius:16px;
+  border:2px solid rgba(0,208,255,0.25);
+  background:rgba(0,8,12,0.35);
+  box-shadow:0 0 20px rgba(0,208,255,0.12);
+  backdrop-filter: blur(6px);
+  transform: translateY(6px);
+}
+
+#schedule.visible{
+  opacity:1;
+  transform: translateY(0);
+  animation: neonPulse 3s infinite;
+}
+
+@keyframes neonPulse{
+  0%,100%{
+    text-shadow:
+      0 0 6px #00d0ff,
+      0 0 18px #00a8c0,
+      0 0 36px #005f70;
+  }
+  50%{
+    text-shadow:
+      0 0 10px #00d0ff,
+      0 0 25px #00b0e0,
+      0 0 45px #007080;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div id="container">
+    <div id="schedule">Загрузка...</div>
+  </div>
+
+<script>
+let Marafon = []; // сюда подгружается JSON
+
+// Загружаем расписание из файла schedule.json
+fetch('Марафон.json')
+  .then(response => response.json())
+  .then(data => {
+    schedule = data;
+    updateSchedule(true); // сразу показать первый слот
+  })
+  .catch(err => console.error('Не удалось загрузить расписание', err));
+
+const div = document.getElementById('schedule');
+let lastText = null;
+
+function getCurrentText(){
+  const now = new Date();
+
+  // перебираем все дни
+  for (const day in schedule) {
+    for (const slot of schedule[day]) {
+      const start = new Date(slot.start);
+      const end = new Date(slot.end);
+
+      // если слот через полночь — добавляем день
+      if (end < start) end.setDate(end.getDate() + 1);
+
+      if (now >= start && now < end) {
+        return slot.text;
+      }
+    }
+  }
+
+  return "🕓 Начало марафона 16.10";
+}
+
+
+function showText(txt){
+  div.classList.remove('visible');
+  setTimeout(() => {
+    div.textContent = txt;
+    div.classList.add('visible');
+    console.debug('[marathon] showText', txt, new Date().toLocaleTimeString());
+  }, 50);
+}
+
+function updateSchedule(force = false){
+  const txt = getCurrentText();
+  if(force || txt !== lastText){
+    showText(txt);
+    lastText = txt;
+  }
+}
+
+// Таймеры и "защита от сна вкладки"
+setInterval(() => updateSchedule(false), 1000);
+let lastRAF = performance.now();
+function rafChecker(ts){
+  if(ts - lastRAF > 3000) updateSchedule(true);
+  lastRAF = ts;
+  requestAnimationFrame(rafChecker);
+}
+requestAnimationFrame(rafChecker);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') updateSchedule(true); });
+window.addEventListener('focus', () => updateSchedule(true));
+</script>
+</body>
+</html>

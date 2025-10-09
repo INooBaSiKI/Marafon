@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NooBaSiK Marathon — График</title>
+<style>
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #0a0a0a;
+  color: #00d0ff;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+}
+th, td {
+  border: 1px solid #00d0ff;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background-color: rgba(0,208,255,0.2);
+}
+tr:nth-child(even) {
+  background-color: rgba(0,208,255,0.05);
+}
+</style>
+</head>
+<body>
+
+<h1>График марафона</h1>
+<div id="schedule-container"></div>
+
+<script>
+// Загружаем JSON с расписанием
+fetch('Марафон.json')
+  .then(response => response.json())
+  .then(data => {
+    const container = document.getElementById('schedule-container');
+
+    for(const day in data) {
+      const dayBlocks = data[day];
+
+      // Создаем заголовок дня
+      const dayHeader = document.createElement('h2');
+      dayHeader.textContent = `📅 ${day}`;
+      container.appendChild(dayHeader);
+
+      // Создаем таблицу
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      thead.innerHTML = `<tr><th>Начало</th><th>Конец</th><th>Активность</th></tr>`;
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      dayBlocks.forEach(block => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(block.start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+          <td>${new Date(block.end).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+          <td>${block.text}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+  })
+  .catch(err => console.error('Не удалось загрузить JSON', err));
+</script>
+
+</body>
+</html>
